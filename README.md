@@ -424,3 +424,12 @@ Future enhancements:
 
 **Last Updated**: August 2026  
 **Version**: 1.0.0
+
+<img width="1864" height="892" alt="image" src="https://github.com/user-attachments/assets/4f23168e-0c9b-426d-b4d0-5367c3601a9b" />
+
+<img width="1853" height="743" alt="image" src="https://github.com/user-attachments/assets/80e3d732-403c-45c5-9f56-4742afc79b94" />
+
+<img width="1848" height="743" alt="image" src="https://github.com/user-attachments/assets/05059bc4-91ec-4a61-9d92-8f0502650fc1" />
+
+
+
