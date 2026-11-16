@@ -10,7 +10,7 @@ import seaborn as sns
 
 st.set_page_config(
     page_title="E-Commerce Sales Dashboard",
-    st.success("🚀 CI/CD Deployment Test [Successful]!")
+    
     page_icon="📊",
     layout="wide"
 )
