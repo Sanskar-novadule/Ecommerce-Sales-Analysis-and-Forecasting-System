@@ -1,4 +1,50 @@
 
+name: Ecommerce CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ecommerce-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Ecommerce Application
+
+    runs-on: [self-hosted, Windows, X64]
+
+    timeout-minutes: 15
+
+    steps:
+      # Step 1: Download latest code
+      - name: Checkout GitHub Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Verify Python environment
+      - name: Verify Python Environment
+        shell: powershell
+        run: |
+          $python = "C:\Deployments\Ecommerce-Sales-Analysis-and-Forecasting-System\venv\Scripts\python.exe"
+
+          if (!(Test-Path $python)) {
+            throw "Python virtual environment not found"
+          }
+
+          & $python --version
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Python verification failed"
+          }
+
+      # Step 3: Deploy application files
       - name: Deploy to Windows
         shell: powershell
         run: |
@@ -7,19 +53,52 @@
           $source = $env:GITHUB_WORKSPACE
           $target = "C:\Deployments\Ecommerce-Sales-Analysis-and-Forecasting-System"
 
+          Write-Host "Starting application deployment..."
+
+          if (!(Test-Path $target)) {
+            throw "Deployment directory not found"
+          }
+
           robocopy $source $target /E /R:2 /W:2 /XD .git .github venv data output __pycache__ /XF *.pyc
 
           $copyExitCode = $LASTEXITCODE
 
           if ($copyExitCode -ge 8) {
-            throw "Deployment copy failed with code $copyExitCode"
+            throw "Robocopy failed with exit code $copyExitCode"
           }
 
-          # Reset Robocopy's successful nonzero exit code
+          # Robocopy codes 0-7 are not copy failures
           $global:LASTEXITCODE = 0
 
           if (!(Test-Path "$target\dashboard\app.py")) {
-            throw "Application file missing"
+            throw "Application file missing after deployment"
           }
 
           Write-Host "SUCCESS: Application code deployed!"
+
+      # Step 4: Verify Streamlit service
+      - name: Verify Streamlit Service
+        shell: powershell
+        run: |
+          $service = Get-Service -Name "EcommerceStreamlit" -ErrorAction Stop
+
+          if ($service.Status -ne "Running") {
+            throw "Streamlit service is not running"
+          }
+
+          Write-Host "SUCCESS: Streamlit service is running"
+
+      # Step 5: Check application health
+      - name: Check Application Health
+        shell: powershell
+        run: |
+          $response = Invoke-WebRequest `
+            -Uri "http://127.0.0.1:8501/_stcore/health" `
+            -UseBasicParsing `
+            -TimeoutSec 15
+
+          if ($response.StatusCode -ne 200) {
+            throw "Application health check failed"
+          }
+
+          Write-Host "SUCCESS: Streamlit application is healthy (HTTP 200)"
