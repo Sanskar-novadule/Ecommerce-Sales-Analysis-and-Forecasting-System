@@ -9,7 +9,7 @@ import seaborn as sns
 # ============================================================
 
 st.set_page_config(
-    page_title=" sanskar ajmera E-Commerce Sales Dashboard",
+    page_title="E-Commerce Sales Dashboard",
     
     page_icon="📊",
     layout="wide"
@@ -31,7 +31,7 @@ df["Month"] = pd.to_datetime(df["Month"])
 # TITLE
 # ============================================================
 
-st.title("🛒 E-Commerce Sales Analysis & Forecasting Dashboard")
+st.title("🛒 E-Commerce Sales Analysis & Forecasting Dashboard System")
 
 st.markdown("---")
 
