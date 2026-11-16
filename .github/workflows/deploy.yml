@@ -1,23 +1,4 @@
 
-name: Ecommerce CI/CD
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-jobs:
-  deploy:
-    runs-on: [self-hosted, Windows, X64]
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Deploy to Windows
         shell: powershell
         run: |
@@ -26,16 +7,19 @@ jobs:
           $source = $env:GITHUB_WORKSPACE
           $target = "C:\Deployments\Ecommerce-Sales-Analysis-and-Forecasting-System"
 
-          # Copy application code, preserving venv and local data
-          robocopy $source $target /E /XD .git .github venv data output __pycache__ /XF *.pyc
+          robocopy $source $target /E /R:2 /W:2 /XD .git .github venv data output __pycache__ /XF *.pyc
 
-          if ($LASTEXITCODE -ge 8) {
-            throw "Deployment copy failed"
+          $copyExitCode = $LASTEXITCODE
+
+          if ($copyExitCode -ge 8) {
+            throw "Deployment copy failed with code $copyExitCode"
           }
 
-          # Verify the deployed application
+          # Reset Robocopy's successful nonzero exit code
+          $global:LASTEXITCODE = 0
+
           if (!(Test-Path "$target\dashboard\app.py")) {
             throw "Application file missing"
           }
 
-          Write-Host "Application code updated successfully"
+          Write-Host "SUCCESS: Application code deployed!"
