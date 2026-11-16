@@ -9,7 +9,7 @@ import seaborn as sns
 # ============================================================
 
 st.set_page_config(
-    page_title="E-Commerce Sales Dashboard",
+    page_title=" sanskar ajmera E-Commerce Sales Dashboard",
     
     page_icon="📊",
     layout="wide"
