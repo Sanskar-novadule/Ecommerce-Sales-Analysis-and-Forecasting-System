@@ -45,3 +45,28 @@ jobs:
           }
 
           Write-Host "Deployment folder exists"
+
+
+          
+      - name: Test staging folder permissions
+        shell: powershell
+        run: |
+          $staging = "C:\Deployments\Ecommerce-Staging"
+
+          if (!(Test-Path $staging)) {
+            throw "Staging folder not found"
+          }
+
+          $testFile = Join-Path $staging "runner-test.txt"
+
+          "GitHub Actions staging test" |
+            Set-Content -Path $testFile
+
+          if (!(Test-Path $testFile)) {
+            throw "Runner cannot write to staging folder"
+          }
+
+          Write-Host "SUCCESS: Runner can write to staging folder"
+
+          Remove-Item $testFile -Force
+
