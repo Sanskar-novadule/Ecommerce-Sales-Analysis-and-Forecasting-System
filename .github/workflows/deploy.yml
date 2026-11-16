@@ -3,70 +3,39 @@ name: Ecommerce CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  verify-runner:
-    name: Verify Windows Runner
-    runs-on:
-      - self-hosted
-      - Windows
-      - X64
-
-    timeout-minutes: 10
+  deploy:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 15
 
     steps:
-      - name: Checkout GitHub repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check Python
+      - name: Deploy to Windows
         shell: powershell
         run: |
-          python --version
+          $ErrorActionPreference = "Stop"
 
-      - name: Verify Streamlit service
-        shell: powershell
-        run: |
-          Get-Service EcommerceStreamlit |
-            Select-Object Name, Status
+          $source = $env:GITHUB_WORKSPACE
+          $target = "C:\Deployments\Ecommerce-Sales-Analysis-and-Forecasting-System"
 
-      - name: Verify deployment folder
-        shell: powershell
-        run: |
-          $path = "C:\Deployments\Ecommerce-Sales-Analysis-and-Forecasting-System"
+          # Copy application code, preserving venv and local data
+          robocopy $source $target /E /XD .git .github venv data output __pycache__ /XF *.pyc
 
-          if (!(Test-Path $path)) {
-            throw "Deployment folder not found"
+          if ($LASTEXITCODE -ge 8) {
+            throw "Deployment copy failed"
           }
 
-          Write-Host "Deployment folder exists"
-
-
-          
-      - name: Test staging folder permissions
-        shell: powershell
-        run: |
-          $staging = "C:\Deployments\Ecommerce-Staging"
-
-          if (!(Test-Path $staging)) {
-            throw "Staging folder not found"
+          # Verify the deployed application
+          if (!(Test-Path "$target\dashboard\app.py")) {
+            throw "Application file missing"
           }
 
-          $testFile = Join-Path $staging "runner-test.txt"
-
-          "GitHub Actions staging test" |
-            Set-Content -Path $testFile
-
-          if (!(Test-Path $testFile)) {
-            throw "Runner cannot write to staging folder"
-          }
-
-          Write-Host "SUCCESS: Runner can write to staging folder"
-
-          Remove-Item $testFile -Force
-
+          Write-Host "Application code updated successfully"
